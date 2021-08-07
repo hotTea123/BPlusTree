@@ -5,11 +5,15 @@
 #define MIN (M % 2 ? M / 2 + 1 : M/2) 
 
 #include<stdio.h>
-#include <stdlib.h>
+#include<stdlib.h>
 #include<time.h>
+#include<string>
+#include<queue>
+#include<fstream>
+using namespace std;
 
 typedef int keyType;
-typedef struct BPlusNode *BPlusTree, *Position;
+typedef struct BPlusNode *BPlusTree;
 struct BPlusNode{
 	bool isLeaf;
 	int keynum;
@@ -26,7 +30,7 @@ BPlusTree NewBPlusNode(){
 	int i;
 	p = (BPlusTree)malloc(sizeof(BPlusNode));
 	if (p == NULL){
-		printf("???????????\n");
+		printf("创建失败\n");
 		return p;
 	}
 
@@ -359,67 +363,123 @@ BPlusTree Remove(BPlusTree T, keyType e){
 	return RemoveT(T, e, NULL);
 }
 
+//先序遍历序列化
+string Serialize(BPlusTree p){
+	int i, a;
+	string str;
+	(p->isLeaf == false) ? a = 0 : a = 1;
+	a += p->keynum * 10;
+	str = to_string(a);    //*将keynum和关键字分开
+	for(i = 0;i < p->keynum;i++){
+		str += "*" + to_string(p->key[i]);
+	}
+	str += '#';    //#表示一个结点结束
+	if(p->isLeaf == false){
+		for(i = 0;i < p->keynum;i++){
+			str += Serialize(p->children[i]);
+		}
+	}
+	return str;
+}
+
+//字符分割
+queue<string> SplitStr(string str, char ch){
+	queue<string> que;
+	string stc = str, s;
+	int i;
+	while(!stc.empty()){
+		i = stc.find_first_of(ch);
+		s = stc.substr(0, i);
+		que.push(s);
+		stc = stc.substr(i + 1);
+	}
+	return que;
+}
+
+//先序遍历反序列化
+BPlusTree DeSerialize(queue<string>& nodeQue){
+	queue<string>  keyQue;
+	string s;
+	BPlusTree p;
+	int key = -1, i = 0;
+	if(nodeQue.empty())
+		return NULL;
+	s = nodeQue.front();
+	nodeQue.pop();
+	s += '*';
+	keyQue = SplitStr(s, '*');
+	if(!keyQue.empty()){
+		key = atoi(keyQue.front().c_str());
+		keyQue.pop();
+		p = NewBPlusNode();
+		if(key % 10 == 0)
+			p->isLeaf = false;
+		p->keynum = key / 10;
+	}
+	while(!keyQue.empty()){
+		key = atoi(keyQue.front().c_str());
+		keyQue.pop();
+		p->key[i] = key;
+		if(p->isLeaf == false){
+			p->children[i] = DeSerialize(nodeQue);
+		}
+			
+
+		i++;
+	}
+	return p;
+}
+
+
 int main(void){
-	//	int choose;
 	keyType e;
 	double duration = 0;
 	clock_t  start, stop;
 	BPlusTree T;
 	T = Initialize();
-	//printf("1.插入    2.删除    3.查询\n");
 	int r;
-	//start = clock(); 
+	start = clock(); 
 
-	for (int i = 0; i < 10000; i++){
-		r = rand() % 1000;
-		T = Insert(T, r);
-	}
+	// 插入测试
+	// for (int i = 0; i < 10000; i++){
+	// 	r = rand() % 10000;
+	// 	T = Insert(T, r);
+	// }
 
-	for (int i= 0; i < 10000; i++){
-		r = rand() % 1000;
-		T = Remove(T, r);
-	}
+	// 删除测试
+	// for (int i= 0; i < 10000; i++){
+	// 	r = rand() % 10000;
+	// 	T = Remove(T, r);
+	// }
 
-	//stop = clock();
-	//duration = ((double)(stop - start)) / CLOCKS_PER_SEC;
-	//printf("time:%f\n", duration);
+	// //时间测试
+	// stop = clock();
+	// duration = ((double)(stop - start)) / CLOCKS_PER_SEC;
+	// printf("time:%f\n", duration);
 
-
-	// //查询测试:q
+	// //查询测试:
 	// if (Search(T, e) != NULL)
 	// 	printf("树中有%d\n", e);
 	// else
 	// 	printf("树中没有%d\n", e);
 
-	// //删除测试
-	// T = Remove(T, 35);
-	// T = Remove(T, 15); 
-	// T = Remove(T, 5);
-	// T = Remove(T, 72);
-	// T = Remove(T, 83); 
-	// T = Remove(T, 90); 
+	// // 序列化测试
+	// ofstream fout;
+	// string str = Serialize(T);
+	// fout.open("BPTree/tree.txt");
+	// fout << str;
+	// fout.close();
 
+	// // 反序列化测试
+	// ifstream fin;
+	// fin.open("BPTree/tree.txt");
+	// string str;
+	// getline(fin, str);
+	// fin.close();
+	// queue<string>  nodeQue;
+	// nodeQue = SplitStr(str, '#');
+	// T = DeSerialize(nodeQue);
 
-
-	//	scanf("%d", &choose);
-	//	if (choose == 1){
-	//		printf("请输入要插入的数");
-	//		printf("\n");
-	//		scanf("%d", &e);
-	//		start = clock(); 
-	//		T = Insert(T, e);
-	//		stop = clock();
-	//		duration = ((double)(stop - start)) / CLK_TCK;
-	//		printf("time:%f\n", duration);
-	//	}else if (choose == 2){
-	//		T = Remove(T, e);
-	//	}else if(choose == 3){
-	//		if(Search(T, e))
-	//			printf("树中有%d\n", e);
-	//		else
-	//			printf("树中没有%d\n", e); 
-	//	}else{
-	//		printf("不合法的输入！\n") 
-	//	}
 	return 0;
 }
+
