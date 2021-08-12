@@ -5,12 +5,15 @@
 #include<string>
 #include<queue>
 #include<fstream>
+#include<iomanip>
+#include<algorithm>
+#include<vector>
 
 const int M = 4;
 const int MIN = M % 2 ? M / 2 + 1 : M/2;
 
 struct BPlusNode{
-    bool isLeaf;
+    bool isLeaf;     
     int keynum;
     int key[M + 1];
     BPlusNode *children[M + 1];
@@ -48,8 +51,10 @@ class BPlusTree{
         std::string Serialize(BPlusNode* p);
         
         std::queue<std::string> SplitStr(std::string str, char ch);
+
+        BPlusNode* DeSerializeT(std::queue<std::string> nodeQue);
         
-        BPlusNode* DeSerialize(std::queue<std::string>& nodeQue);
+        BPlusNode* DeSerialize(std::queue<std::string>& nodeQue, BPlusNode **data);
 
 };
 

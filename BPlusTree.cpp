@@ -358,7 +358,7 @@ std::queue<std::string> BPlusTree::SplitStr(std::string str, char ch){
 	return que;
 }
         
-BPlusNode* BPlusTree::DeSerialize(std::queue<std::string>& nodeQue){
+BPlusNode* BPlusTree::DeSerialize(std::queue<std::string>& nodeQue, BPlusNode **data){
     std::queue<std::string>  keyQue;
 	std::string s;
 	BPlusNode *p;
@@ -376,20 +376,48 @@ BPlusNode* BPlusTree::DeSerialize(std::queue<std::string>& nodeQue){
 		if(key % 10 == 0)
 			p->isLeaf = false;
 		p->keynum = key / 10;
+		if(p->isLeaf){
+			if(*data == nullptr){
+				*data = p;
+				(*data)->next = nullptr;
+				(*data)->prior = nullptr;
+			}else{
+				(*data)->next = p;
+				p->prior = *data;
+				p->next = nullptr;
+				*data = p;
+			}
+		}
 	}
 	while(!keyQue.empty()){
 		key = atoi(keyQue.front().c_str());
 		keyQue.pop();
 		p->key[i] = key;
 		if(p->isLeaf == false){
-			p->children[i] = DeSerialize(nodeQue);
+			p->children[i] = DeSerialize(nodeQue, data);
 		}
-			
-
 		i++;
 	}
 	return p;
 }
+
+BPlusNode* BPlusTree::DeSerializeT(std::queue<std::string> nodeQue){
+	BPlusNode *data;
+	data = nullptr;
+	return DeSerialize(nodeQue, &data);
+}
+
+
+vector<int> RandNumber(int num){
+	vector<int> temp;
+	for (int i = 0; i < num; ++i)
+        temp.push_back(i + 1);
+	random_shuffle(temp.begin(), temp.end());
+	// for (int i = 0; i < temp.size(); i++)
+    // 	cout << temp[i] << " ";
+	return temp;
+}
+
 
 int main(void){
 	int e;
@@ -401,28 +429,43 @@ int main(void){
     //
 	T = bpt.Initialize();
 	start = clock(); 
+	//vector<int> randomVector = RandNumber(1000000);    //生成随机序列
 
 	// for (int i = 0; i < 15; i++){
 	// 	r = rand() % 100;
 	// 	T = bpt.Insert(T, r);
 	// }
 
-	// // 插入测试
-	// for (int i = 0; i < 10000; i++){
-	// 	r = rand() % 10000;
+	//顺序插入测试
+	// for (int i = 0; i < 100000000; i++){
+	// 	T = bpt.Insert(T, i);
+	// }
+	
+
+	// // 乱序插入测试
+	// for (int i = 0; i < 1000000; i++){
+	// 	r = randomVector[i];
 	// 	T = bpt.Insert(T, r);
+	// }
+
+	// while (1)
+	// {
+	// 	cin >> r;
+	// 	break;
 	// }
 
 	// // 删除测试
 	// for (int i= 0; i < 10000; i++){
-	// 	r = rand() % 10000;
+	// 	r = rand() % 100000;
 	// 	T = bpt.Remove(T, r);
 	// }
 
-	// //时间测试
-	// stop = clock();
-	// duration = ((double)(stop - start)) / CLOCKS_PER_SEC;
-	// printf("time:%f\n", duration);
+	//时间测试
+	stop = clock();
+	duration = ((double)(stop - start)) / CLOCKS_PER_SEC;
+	//printf("time:%f\n", duration);
+	//cout << "time:" << setprecision(10) << time << endl;
+	cout <<"Running Time : "<<(double)(stop - start)/ CLOCKS_PER_SEC << endl;
 
 	// //查询测试:
 	// if (bpt.Search(T, e) != NULL)
@@ -444,8 +487,8 @@ int main(void){
 	// getline(fin, str);
 	// fin.close();
 	// queue<string>  nodeQue;
-	// nodeQue = SplitStr(str, '#');
-	// T = DeSerialize(nodeQue);
+	// nodeQue = bpt.SplitStr(str, '#');
+	// T = bpt.DeSerializeT(nodeQue);
 
 	return 0;
 }
